@@ -33,8 +33,25 @@ def check_mst(adj_mat: np.ndarray,
     for i in range(mst.shape[0]):
         for j in range(i+1):
             total += mst[i, j]
+    
     assert approx_equal(total, expected_weight), 'Proposed MST has incorrect expected weight'
+    
+    
+    # Additional assertion to check for correct number of edges
+    num_edges = (np.count_nonzero(mst)) / 2
 
+    num_nodes = mst.shape[0]
+
+    # Assert that number of edges is the expected number
+    assert num_edges == num_nodes - 1
+    
+    # Assert that number of nodes in initial matrix matches the MST matrix
+    assert num_nodes == adj_mat.shape[0]
+    
+    # Assert number of edges in MST is less than or equal to number of edges in adj_mat
+    assert num_edges <= np.count_nonzero(adj_mat)
+    
+    
 
 def test_mst_small():
     """
@@ -47,7 +64,7 @@ def test_mst_small():
     g.construct_mst()
     check_mst(g.adj_mat, g.mst, 8)
 
-
+    
 def test_mst_single_cell_data():
     """
     
@@ -63,12 +80,36 @@ def test_mst_single_cell_data():
     g = Graph(dist_mat)
     g.construct_mst()
     check_mst(g.adj_mat, g.mst, 57.263561605571695)
-
-
+    
+    
 def test_mst_student():
     """
     
     TODO: Write at least one unit test for MST construction.
     
     """
-    pass
+
+    # Disconnected input adj matrix
+    mat = np.array([[0, 1, 1, 1, 0],
+       [1, 0, 1, 1, 0],
+       [1, 1, 0, 1, 0],
+       [1, 1, 1, 0, 0],
+       [0, 0, 0, 0, 0]])
+
+    g = Graph(mat)
+    g.construct_mst()
+    num_edges = (np.count_nonzero(g.mst)) / 2
+    num_nodes = g.mst.shape[0]
+
+    # Assert that number of edges WILL NOT be 1 less than number of nodes, because input graph is disconnected!
+    assert num_edges != num_nodes - 1
+
+    #Check if weight of MST is lower that that of adj mat
+    assert np.sum(g.adj_mat) > np.sum(g.mst)
+
+    
+    # Asserting ValueError for empty matrix
+    empty_graph = np.zeros((5,5))
+    g = Graph(empty_graph)
+    with pytest.raises(ValueError, match='Adjacency matrix has no edges'):
+        g.construct_mst()
